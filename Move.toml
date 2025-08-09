@@ -1,0 +1,15 @@
+[package]
+name = "MigrationAsssistantSmartContract"
+version = "1.0.0"
+authors = []
+
+[addresses]
+addr="0x9d87dfd8c86c6bfb8b160782fec651484f677de0fc0b2edc903df669987f398c"
+[dev-addresses]
+
+[dependencies.AptosFramework]
+git = "https://github.com/aptos-labs/aptos-framework.git"
+rev = "mainnet"
+subdir = "aptos-framework"
+
+[dev-dependencies]
