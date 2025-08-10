@@ -1,0 +1,478 @@
+import React, { useState, useEffect } from 'react';
+import { 
+  Database, 
+  ArrowRight, 
+  Shield, 
+  Clock, 
+  CheckCircle, 
+  AlertCircle, 
+  Settings, 
+  Activity,
+  Hash,
+  User,
+  RefreshCw
+} from 'lucide-react';
+
+const MigrationAssistant = () => {
+  // State management
+  const [isConnected, setIsConnected] = useState(false);
+  const [walletAddress, setWalletAddress] = useState('');
+  const [currentTab, setCurrentTab] = useState('migrate');
+  const [migrationData, setMigrationData] = useState({
+    fromVersion: '',
+    toVersion: '',
+    dataHash: ''
+  });
+  const [migrationHistory, setMigrationHistory] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [notification, setNotification] = useState(null);
+  const [contractStats, setContractStats] = useState({
+    totalMigrations: 0,
+    supportedVersions: [1],
+    lastMigration: null
+  });
+
+  // Mock contract address from your deployment
+  const CONTRACT_ADDRESS = "0x9d87dfd8c86c6bfb8b160782fec651484f677de0fc0b2edc903df669987f398c";
+
+  // Simulate wallet connection
+  const connectWallet = async () => {
+    setIsLoading(true);
+    // Simulate connection delay
+    setTimeout(() => {
+      setIsConnected(true);
+      setWalletAddress("0x" + Math.random().toString(16).substr(2, 40));
+      setIsLoading(false);
+      showNotification("Wallet connected successfully!", "success");
+    }, 1500);
+  };
+
+  const disconnectWallet = () => {
+    setIsConnected(false);
+    setWalletAddress('');
+    showNotification("Wallet disconnected", "info");
+  };
+
+  // Notification system
+  const showNotification = (message, type) => {
+    setNotification({ message, type });
+    setTimeout(() => setNotification(null), 5000);
+  };
+
+  // Initialize migration tools
+  const initializeMigrationTools = async () => {
+    if (!isConnected) {
+      showNotification("Please connect your wallet first", "error");
+      return;
+    }
+
+    setIsLoading(true);
+    // Simulate contract interaction
+    setTimeout(() => {
+      setContractStats(prev => ({
+        ...prev,
+        supportedVersions: [1],
+        totalMigrations: 0
+      }));
+      setIsLoading(false);
+      showNotification("Migration tools initialized successfully!", "success");
+    }, 2000);
+  };
+
+  // Handle migration
+  const handleMigration = async () => {
+    
+    if (!isConnected) {
+      showNotification("Please connect your wallet first", "error");
+      return;
+    }
+
+    if (!migrationData.fromVersion || !migrationData.toVersion || !migrationData.dataHash) {
+      showNotification("Please fill in all migration fields", "error");
+      return;
+    }
+
+    if (parseInt(migrationData.fromVersion) >= parseInt(migrationData.toVersion)) {
+      showNotification("Target version must be higher than source version", "error");
+      return;
+    }
+
+    setIsLoading(true);
+    
+    // Simulate contract interaction
+    setTimeout(() => {
+      const newMigration = {
+        id: Date.now(),
+        fromVersion: migrationData.fromVersion,
+        toVersion: migrationData.toVersion,
+        dataHash: migrationData.dataHash,
+        timestamp: new Date().toLocaleString(),
+        status: 'completed',
+        isVerified: true
+      };
+
+      setMigrationHistory(prev => [newMigration, ...prev]);
+      setContractStats(prev => ({
+        ...prev,
+        totalMigrations: prev.totalMigrations + 1,
+        supportedVersions: [...new Set([...prev.supportedVersions, parseInt(migrationData.toVersion)])],
+        lastMigration: newMigration.timestamp
+      }));
+
+      // Reset form
+      setMigrationData({
+        fromVersion: '',
+        toVersion: '',
+        dataHash: ''
+      });
+
+      setIsLoading(false);
+      showNotification("Data migration completed successfully!", "success");
+    }, 3000);
+  };
+
+  // Generate random hash for demo
+  const generateSampleHash = () => {
+    const hash = "0x" + Math.random().toString(16).substr(2, 64);
+    setMigrationData(prev => ({
+      ...prev,
+      dataHash: hash
+    }));
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
+      {/* Header */}
+      <header className="bg-white/80 backdrop-blur-md border-b border-gray-200/50 sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-2 rounded-xl">
+                <Database className="w-8 h-8 text-white" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                  Migration Assistant
+                </h1>
+                <p className="text-sm text-gray-600">Smart Contract Data Migration Tools</p>
+              </div>
+            </div>
+            
+            <div className="flex items-center space-x-4">
+              {isConnected ? (
+                <div className="flex items-center space-x-3">
+                  <div className="text-right">
+                    <p className="text-sm font-medium text-gray-900">Connected</p>
+                    <p className="text-xs text-gray-500">{walletAddress.slice(0, 10)}...{walletAddress.slice(-8)}</p>
+                  </div>
+                  <button
+                    onClick={disconnectWallet}
+                    className="px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors"
+                  >
+                    Disconnect
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={connectWallet}
+                  disabled={isLoading}
+                  className="px-6 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all disabled:opacity-50 flex items-center space-x-2"
+                >
+                  {isLoading && <RefreshCw className="w-4 h-4 animate-spin" />}
+                  <span>{isLoading ? 'Connecting...' : 'Connect Wallet'}</span>
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {/* Notification */}
+      {notification && (
+        <div className={`fixed top-20 right-4 z-50 p-4 rounded-lg shadow-lg max-w-sm ${
+          notification.type === 'success' ? 'bg-green-100 text-green-800 border border-green-200' :
+          notification.type === 'error' ? 'bg-red-100 text-red-800 border border-red-200' :
+          'bg-blue-100 text-blue-800 border border-blue-200'
+        }`}>
+          <div className="flex items-center space-x-2">
+            {notification.type === 'success' ? <CheckCircle className="w-5 h-5" /> :
+             notification.type === 'error' ? <AlertCircle className="w-5 h-5" /> :
+             <AlertCircle className="w-5 h-5" />}
+            <p className="text-sm font-medium">{notification.message}</p>
+          </div>
+        </div>
+      )}
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Stats Overview */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          <div className="bg-white/70 backdrop-blur-md rounded-xl p-6 border border-gray-200/50">
+            <div className="flex items-center space-x-3">
+              <Activity className="w-8 h-8 text-blue-600" />
+              <div>
+                <p className="text-2xl font-bold text-gray-900">{contractStats.totalMigrations}</p>
+                <p className="text-sm text-gray-600">Total Migrations</p>
+              </div>
+            </div>
+          </div>
+          
+          <div className="bg-white/70 backdrop-blur-md rounded-xl p-6 border border-gray-200/50">
+            <div className="flex items-center space-x-3">
+              <Settings className="w-8 h-8 text-green-600" />
+              <div>
+                <p className="text-2xl font-bold text-gray-900">{contractStats.supportedVersions.length}</p>
+                <p className="text-sm text-gray-600">Supported Versions</p>
+              </div>
+            </div>
+          </div>
+          
+          <div className="bg-white/70 backdrop-blur-md rounded-xl p-6 border border-gray-200/50">
+            <div className="flex items-center space-x-3">
+              <Shield className="w-8 h-8 text-purple-600" />
+              <div>
+                <p className="text-2xl font-bold text-gray-900">100%</p>
+                <p className="text-sm text-gray-600">Success Rate</p>
+              </div>
+            </div>
+          </div>
+          
+          <div className="bg-white/70 backdrop-blur-md rounded-xl p-6 border border-gray-200/50">
+            <div className="flex items-center space-x-3">
+              <Clock className="w-8 h-8 text-orange-600" />
+              <div>
+                <p className="text-2xl font-bold text-gray-900">{contractStats.lastMigration ? 'Recent' : 'None'}</p>
+                <p className="text-sm text-gray-600">Last Migration</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Main Content */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Migration Form */}
+          <div className="lg:col-span-2">
+            <div className="bg-white/70 backdrop-blur-md rounded-xl border border-gray-200/50 overflow-hidden">
+              {/* Tabs */}
+              <div className="flex border-b border-gray-200/50">
+                <button
+                  onClick={() => setCurrentTab('migrate')}
+                  className={`px-6 py-4 font-medium text-sm transition-colors ${
+                    currentTab === 'migrate' 
+                      ? 'bg-blue-50 text-blue-700 border-b-2 border-blue-600' 
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  Migrate Data
+                </button>
+                <button
+                  onClick={() => setCurrentTab('initialize')}
+                  className={`px-6 py-4 font-medium text-sm transition-colors ${
+                    currentTab === 'initialize' 
+                      ? 'bg-blue-50 text-blue-700 border-b-2 border-blue-600' 
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  Initialize Tools
+                </button>
+              </div>
+
+              <div className="p-6">
+                {currentTab === 'migrate' ? (
+                  <div className="space-y-6">
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-900 mb-4">Migrate Contract Data</h3>
+                      <p className="text-sm text-gray-600 mb-6">
+                        Migrate your smart contract data from one version to another with complete integrity verification.
+                      </p>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          From Version
+                        </label>
+                        <input
+                          type="number"
+                          value={migrationData.fromVersion}
+                          onChange={(e) => setMigrationData(prev => ({
+                            ...prev,
+                            fromVersion: e.target.value
+                          }))}
+                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          placeholder="e.g. 1"
+                          min="1"
+                        />
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          To Version
+                        </label>
+                        <input
+                          type="number"
+                          value={migrationData.toVersion}
+                          onChange={(e) => setMigrationData(prev => ({
+                            ...prev,
+                            toVersion: e.target.value
+                          }))}
+                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          placeholder="e.g. 2"
+                          min="1"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Data Hash
+                      </label>
+                      <div className="flex space-x-2">
+                        <input
+                          type="text"
+                          value={migrationData.dataHash}
+                          onChange={(e) => setMigrationData(prev => ({
+                            ...prev,
+                            dataHash: e.target.value
+                          }))}
+                          className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          placeholder="0x..."
+                        />
+                        <button
+                          type="button"
+                          onClick={generateSampleHash}
+                          className="px-4 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors flex items-center space-x-2"
+                        >
+                          <Hash className="w-4 h-4" />
+                          <span>Generate</span>
+                        </button>
+                      </div>
+                      <p className="text-xs text-gray-500 mt-1">
+                        Hash of the data being migrated for integrity verification
+                      </p>
+                    </div>
+
+                    <button
+                      onClick={handleMigration}
+                      disabled={isLoading || !isConnected}
+                      className="w-full px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all disabled:opacity-50 flex items-center justify-center space-x-2"
+                    >
+                      {isLoading && <RefreshCw className="w-5 h-5 animate-spin" />}
+                      <ArrowRight className="w-5 h-5" />
+                      <span>{isLoading ? 'Migrating...' : 'Start Migration'}</span>
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-6">
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-900 mb-4">Initialize Migration Tools</h3>
+                      <p className="text-sm text-gray-600 mb-6">
+                        Set up the migration infrastructure for your smart contract. This is required before performing any migrations.
+                      </p>
+                    </div>
+
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                      <div className="flex items-start space-x-3">
+                        <AlertCircle className="w-5 h-5 text-blue-600 mt-0.5" />
+                        <div>
+                          <h4 className="font-medium text-blue-900">Contract Address</h4>
+                          <p className="text-sm text-blue-700 font-mono break-all">{CONTRACT_ADDRESS}</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={initializeMigrationTools}
+                      disabled={isLoading || !isConnected}
+                      className="w-full px-6 py-3 bg-gradient-to-r from-green-600 to-blue-600 text-white rounded-lg hover:from-green-700 hover:to-blue-700 transition-all disabled:opacity-50 flex items-center justify-center space-x-2"
+                    >
+                      {isLoading && <RefreshCw className="w-5 h-5 animate-spin" />}
+                      <Settings className="w-5 h-5" />
+                      <span>{isLoading ? 'Initializing...' : 'Initialize Tools'}</span>
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Migration History */}
+          <div className="bg-white/70 backdrop-blur-md rounded-xl border border-gray-200/50 overflow-hidden">
+            <div className="p-6 border-b border-gray-200/50">
+              <h3 className="text-lg font-semibold text-gray-900">Migration History</h3>
+              <p className="text-sm text-gray-600">Recent migration activities</p>
+            </div>
+            
+            <div className="max-h-96 overflow-y-auto">
+              {migrationHistory.length === 0 ? (
+                <div className="p-6 text-center">
+                  <Database className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                  <p className="text-sm text-gray-600">No migrations yet</p>
+                  <p className="text-xs text-gray-500">Start your first migration to see history</p>
+                </div>
+              ) : (
+                <div className="divide-y divide-gray-200/50">
+                  {migrationHistory.map((migration) => (
+                    <div key={migration.id} className="p-4">
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-start space-x-3">
+                          <div className="bg-green-100 p-2 rounded-lg">
+                            <CheckCircle className="w-4 h-4 text-green-600" />
+                          </div>
+                          <div>
+                            <div className="flex items-center space-x-2">
+                              <span className="text-sm font-medium text-gray-900">
+                                v{migration.fromVersion}
+                              </span>
+                              <ArrowRight className="w-3 h-3 text-gray-400" />
+                              <span className="text-sm font-medium text-gray-900">
+                                v{migration.toVersion}
+                              </span>
+                            </div>
+                            <p className="text-xs text-gray-500 mt-1">{migration.timestamp}</p>
+                            <p className="text-xs text-gray-600 mt-1 font-mono">
+                              {migration.dataHash.slice(0, 20)}...
+                            </p>
+                          </div>
+                        </div>
+                        <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
+                          Verified
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Contract Information */}
+        <div className="mt-8 bg-white/70 backdrop-blur-md rounded-xl border border-gray-200/50 p-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Contract Information</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <h4 className="font-medium text-gray-900 mb-2">Supported Versions</h4>
+              <div className="flex flex-wrap gap-2">
+                {contractStats.supportedVersions.map((version) => (
+                  <span key={version} className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
+                    v{version}
+                  </span>
+                ))}
+              </div>
+            </div>
+            <div>
+              <h4 className="font-medium text-gray-900 mb-2">Error Codes</h4>
+              <div className="space-y-1 text-sm text-gray-600">
+                <p><code className="bg-gray-100 px-1 rounded">E_NOT_AUTHORIZED (1)</code> - Not authorized</p>
+                <p><code className="bg-gray-100 px-1 rounded">E_MIGRATION_ALREADY_EXISTS (2)</code> - Already exists</p>
+                <p><code className="bg-gray-100 px-1 rounded">E_INVALID_VERSION (3)</code> - Invalid version</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default MigrationAssistant;
